@@ -22,9 +22,10 @@ m <- metadata[in_otus & in_expr, ]
 expr <- expr[, colnames(expr) %in% rownames(m)]
 otus <- otus[, colnames(otus) %in% m$MID]
 
-expr <- expr
-# otus <- filter_RNAseq(norm_RNAseq(otus))
+all0 <- apply(otus, 1, function(x){all(x == 0)})
+otus <- otus[!all0, ]
 
+# otus <- filter_RNAseq(norm_RNAseq(otus))
 MR_i <- newMRexperiment(otus)
 MR_i <- cumNorm(MR_i, metagenomeSeq::cumNormStat(MR_i))
 otus <- MRcounts(MR_i, norm = TRUE, log = TRUE)
