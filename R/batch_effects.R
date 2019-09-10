@@ -2,6 +2,8 @@ library("integration")
 library("experDesign")
 library("RGCCA")
 library("metagenomeSeq")
+library("ggplot2")
+library("dplyr")
 
 metadata <- read.delim("data/input/gene expression metadata gold.txt")
 
@@ -186,16 +188,18 @@ l <- list.files(pattern = "model.*[0-9]_edge.RDS")
 # sapply(l, function(x){readRDS(x)$C})
 ls <- sapply(l, function(x){readRDS(x)$AVE$AVE_inner})
 lsa <- gsub("_edge\\.RDS", "", l)
-pos <- order(as.numeric(gsub("model", "", lsa)))
+pos <- order((gsub("model", "", lsa)))
 ls[, pos]
 
 # l <- list.files(pattern = "model.*[0-9].RDS")
 # sapply(l, function(x){readRDS(x)$C})
 # ls <- sapply(l, function(x){readRDS(x)$AVE$AVE_inner})
 # lsa <- gsub("\\.RDS", "", l)
-models <- as.numeric(gsub("model", "", lsa))
+models <- gsub("model", "", lsa)
 pos <- order(models)
 models[pos]
+
+
 s <- lapply(seq_along(l), function(x) {
   y <- readRDS(l[x])
   df <- data.frame("RNAseq" = y$Y[[1]][, 1], "16S" = y$Y[[2]][, 1], 
@@ -203,7 +207,22 @@ s <- lapply(seq_along(l), function(x) {
   cbind(df, m[, c("Gender", "Location", "Outcome", "ISCORE", "Antibiotics")])
 })
 
+a <- lapply(seq_along(l), function(x) {
+  y <- readRDS(l[x])
+  data.frame("rownames" = seq_len(sum(nrow(y$a[[1]]), nrow(y$a[[2]]))),
+             "values" = c(y$a[[1]][, 1], y$a[[2]][, 1]), 
+             Model = models[x], check.names = FALSE)
+})
+
 s3 <- do.call(rbind, s)
+a3 <- do.call(rbind, a)
+td <- tidyr::spread(a3, key = rownames, value = values)
+rownames(td) <- td[, 1]
+td <- t(td[, -1])
+
+td[td != 0] <- 1
+library(UpSetR)
+upset(as.data.frame(td)[, -c(1:6)], nsets = 14)
 
 rn <- tidyr::spread(s3[, -2], key = "Model", value = "RNAseq") 
 sn <- tidyr::spread(s3[, -1], key = "Model", value = "16S") 
@@ -212,20 +231,38 @@ write.csv(rn, "RNASeq_models.csv", row.names = FALSE)
 write.csv(sn, "16S_models.csv", row.names = FALSE)
 
 theme_set(theme_bw())
-theme_update(strip.background = element_blank())
+theme_update(strip.background = element_blank(), 
+             panel.grid.minor = element_blank(),
+             axis.text.x = element_blank(),
+             axis.text.y = element_blank(),
+             axis.ticks = element_blank())
 
 ggplot(s3) +
   geom_point(aes(RNAseq, `16S`, col = Outcome)) +
-  facet_wrap(~Model, nrow = 2, scales = "free")
+  facet_wrap(~Model, nrow = 2, scales = "free") +
+  scale_x_continuous(breaks = seq(-0.25, 0.75, by = 0.25)) +
+  scale_y_continuous(breaks = seq(-0.25, 0.75, by = 0.25))
 ggplot(s3) +
-  geom_point(aes(RNAseq, `16S`, col = ISCORE)) +
-  facet_wrap(~Model, nrow = 2, scales = "free")
-ggplot(s3) +
-  geom_point(aes(RNAseq, `16S`, col = Gender)) +
-  facet_wrap(~Model, nrow = 2, scales = "free")
-ggplot(s3) +
-  geom_point(aes(RNAseq, `16S`, col = Location)) +
-  facet_wrap(~Model, nrow = 2, scales = "free")
+  geom_point(aes(RNAseq, `16S`, col = ISCORE), size = 2) +
+  facet_wrap(~Model, nrow = 2, scales = "free") +
+  scale_x_continuous(breaks = seq(-0.25, 0.75, by = 0.25)) +
+  scale_y_continuous(breaks = seq(-0.25, 0.75, by = 0.25))
+p_by_sex <- ggplot(s3) +
+  geom_point(aes(RNAseq, `16S`, col = Gender), size = 0.5) +
+  facet_wrap(~Model, nrow = 2, scales = "free") +
+  labs(col = "Sex", x = "Transcriptome", y = "Microbiome") +
+  scale_x_continuous(breaks = seq(-0.25, 0.75, by = 0.25)) +
+  scale_y_continuous(breaks = seq(-0.25, 0.75, by = 0.25))
+p_by_loc <- ggplot(s3) +
+  geom_point(aes(RNAseq, `16S`, col = Location), size = 0.5) +
+  facet_wrap(~Model, nrow = 2, scales = "free") +
+  scale_x_continuous(breaks = seq(-0.25, 0.75, by = 0.25)) +
+  scale_y_continuous(breaks = seq(-0.25, 0.75, by = 0.25)) +
+  labs(x = "Transcriptome", y = "Microbiome")
+
+p <- p_by_sex/p_by_loc  + plot_annotation(tag_levels = "A")
+ggsave("Figures/location_status_pouchitis.png", units = "mm", width = 170, 
+       height = 112, dpi = 300)
 
 ## Create some index and permutations to test the variability on the models.
 
@@ -259,14 +296,18 @@ base_boot <- function(index, A, C) {
   list(AVE = AVE, STAB = STAB)
 }
 model0 <- readRDS("model0.RDS")
-boot0 <- lapply(index, base_boot, A = A[1:2], C = model0$C)
-saveRDS(boot0, "boot0.RDS")
+# boot0 <- lapply(index, base_boot, A = A[1:2], C = model0$C)
+# saveRDS(boot0, "boot0.RDS")
 model1.2 <- readRDS("model1.2.RDS")
-boot1.2 <- lapply(index, base_boot, A = A1.2, C = model1.2$C)
-saveRDS(boot1.2, "boot1.2.RDS")
+# boot1.2 <- lapply(index, base_boot, A = A1.2, C = model1.2$C)
+# saveRDS(boot1.2, "boot1.2.RDS")
 model2.2 <- readRDS("model2.2.RDS")
-boot2.2 <- lapply(index, base_boot, A = A2.2, C = model2.2$C)
-saveRDS(boot2.2, "boot2.2.RDS")
+# boot2.2 <- lapply(index, base_boot, A = A2.2, C = model2.2$C)
+# saveRDS(boot2.2, "boot2.2.RDS")
+
+boot0 <- readRDS("boot0.RDS")
+boot1.2 <- readRDS("boot1.2.RDS")
+boot2.2 <- readRDS("boot2.2.RDS")
 
 
 ave0 <- cbind.data.frame(t(sapply(boot0, function(x)x$AVE)), Model = "0")
@@ -274,6 +315,16 @@ ave1.2 <- cbind.data.frame(t(sapply(boot1.2, function(x)x$AVE)), Model = "1.2")
 ave2.2 <- cbind.data.frame(t(sapply(boot2.2, function(x)x$AVE)), Model = "2.2")
 aves <- rbind(ave0, ave1.2, ave2.2)
 aves <- filter(aves, inner != 0 & outer != 0)
+
+aves %>% 
+  tidyr::gather(inner, outer, -Model) %>% 
+  rename(AVE = inner, value = outer) %>% 
+  group_by(Model, AVE) %>% 
+  summarise(mean(value), sd(value)) %>% 
+  arrange(AVE)
+
+
+
 m0 <- data.frame(inner = model0$AVE$AVE_inner[1], 
                  outer = model0$AVE$AVE_outer[1],
                  Model = "0")
