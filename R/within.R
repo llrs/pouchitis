@@ -46,7 +46,6 @@ meta <- model_RGCCA(m, c("Gender", "ID_1", "Antibiotics", "Location", "ISCORE"))
 A1.2 <- A
 A1.2$meta <- meta
 C <- matrix(0, ncol = length(A1.2), nrow = length(A1.2), dimnames = list(names(A1.2), names(A1.2)))
-model1 <- subSymm(C, "RNAseq", "16S", 1)
 model1 <- subSymm(C, "RNAseq", "RNAseq", 1)
 model1 <- subSymm(model1, "RNAseq", "meta", 1)
 model1 <- subSymm(model1, "meta", "16S", 1)
@@ -98,7 +97,6 @@ C <- matrix(
   0, ncol = length(A2.2), nrow = length(A2.2),
   dimnames = list(names(A2.2), names(A2.2))
 )
-model2 <- subSymm(C, "16S", "RNAseq", 1)
 model2 <- subSymm(C, "RNAseq", "RNAseq", 1)
 model2 <- subSymm(model2, "RNAseq", "Demographics", 1)
 model2 <- subSymm(model2, "RNAseq", "Location", 1)
