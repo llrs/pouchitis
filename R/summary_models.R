@@ -9,7 +9,7 @@ library("clusterProfiler")
 library("integration")
 library("stringr")
 library("patchwork")
-
+library("plotROC")
 
 m0 <- readRDS("model0_edge.RDS")
 m0i <- readRDS("imodel0_edge.RDS")
@@ -26,10 +26,10 @@ m2.2 <- readRDS("model2.2_edge.RDS")
 m2.2i <- readRDS("imodel2.2_edge.RDS")
 m2.3 <- readRDS("model2.2_edge.RDS")
 
-m0i$AVE$AVE_inner-m0$AVE$AVE_inner
-m1.1i$AVE$AVE_inner-m1.1$AVE$AVE_inner
-m1.2i$AVE$AVE_inner-m1.2$AVE$AVE_inner
-m2.1i$AVE$AVE_inner-m2.1$AVE$AVE_inner
+m0i$AVE$AVE_inner - m0$AVE$AVE_inner
+m1.1i$AVE$AVE_inner - m1.1$AVE$AVE_inner
+m1.2i$AVE$AVE_inner - m1.2$AVE$AVE_inner
+m2.1i$AVE$AVE_inner - m2.1$AVE$AVE_inner
 
 # Samples ####
 
@@ -84,7 +84,8 @@ df <- rbind(
   merger(m2.2M, m2.2GE),
   merger(m2.2iM, m2.2iGE),
   merger(m2.3M, m2.3GE))
-
+saveRDS(df, "summary_models.RDS")
+df <- readRDS("summary_models.RDS")
 
 # Set theme without background on the labels
 theme_set(theme_bw())
@@ -115,6 +116,20 @@ loc <- df %>%
 p <- sex/loc  + plot_annotation(tag_levels = "A")
 ggsave("Figures/Figure_5.png", units = "mm", width = 170, 
        height = 170, dpi = 300)
+
+
+# ROC ####
+p1 <- df %>% 
+  filter(!endsWith(Model, " i"),
+         Component == "comp1") %>% 
+  ggplot() +
+  geom_roc(aes(d = Location, m = GE, col = Model), n.cuts =  0) +
+  style_roc()
+p1 +
+  annotate(geom = "text", x = 1, y = seq(0.65, by = -0.05, length.out = 8),
+           label = paste("AUC = ", round(calc_auc(p1)[, "AUC"], 3))) +
+  labs(title = "AUC for RGCCA models", subtitle = "Classifying by location")
+ggsave("Figures/AUC_models.png")
 
 # Weights ####
 m0GE <- tidyer(m0$a[[1]], "0", "GE")
