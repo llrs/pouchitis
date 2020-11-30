@@ -49,7 +49,7 @@ plot(pca.expr$x, pch = 16, col = m$Gender,
      xlab = paste("PC1", round(s$importance[2, 1]*100, 4), "%"),
      ylab = paste("PC2", round(s$importance[2, 2]*100, 4), "%"))
 
-otus.data <- otus-apply(otus, 1, median)
+otus.data <- otus - apply(otus, 1, median)
 pca <- prcomp(t(otus.data), center = TRUE, scale. = TRUE)
 s <- summary(pca)
 plot(pca$x, pch = 16, col = m$Location, 
