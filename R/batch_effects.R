@@ -21,7 +21,7 @@ in_expr <- rownames(metadata) %in% colnames(expr)
 
 m <- metadata[in_otus & in_expr, ]
 m <- droplevels(m)
-
+saveRDS(m, "metadata.RDS")
 expr <- expr[, colnames(expr) %in% rownames(m)]
 otus <- otus[, colnames(otus) %in% m$MID]
 
@@ -33,7 +33,7 @@ otus <- filter_RNAseq(norm_RNAseq(otus))
 # MR_i <- cumNorm(MR_i, metagenomeSeq::cumNormStat(MR_i))
 # otus <- MRcounts(MR_i, norm = TRUE, log = TRUE)
 
-expr.data <- expr-apply(expr, 1, median)
+expr.data <- expr - apply(expr, 1, median)
 pca.expr <- prcomp(t(expr.data), center = FALSE, scale. = FALSE)
 s <- summary(pca.expr)
 plot(pca.expr$x, pch = 16, col = m$Location, 
@@ -68,6 +68,7 @@ plot(pca$x, pch = 16, col = m$Batch,
 Demographics <- model_RGCCA(m, c("Gender", "ID_1", "Antibiotics"))
 Location <- model_RGCCA(m, c("Location", "ISCORE"))
 A <- list(RNAseq =  t(expr), "16S" = t(otus))
+saveRDS(A, "data.RDS")
 shrinkage <- sapply(A, tau.estimate)
 C <- matrix(0, ncol = 2, nrow = 2, dimnames = list(names(A), names(A)))
 model0 <- subSymm(C, "RNAseq", "16S", 1)
