@@ -129,6 +129,8 @@ p1 +
   annotate(geom = "text", x = 1, y = seq(0.65, by = -0.05, length.out = 8),
            label = paste("AUC = ", round(calc_auc(p1)[, "AUC"], 3))) +
   labs(title = "AUC for RGCCA models", subtitle = "Classifying by location")
+p1 + 
+  labs(title = "AUC for RGCCA models", subtitle = "Classifying by location")
 ggsave("Figures/AUC_models.png")
 
 # Weights ####
