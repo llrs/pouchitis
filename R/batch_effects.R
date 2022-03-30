@@ -38,7 +38,9 @@ pca.expr <- prcomp(t(expr.data), center = FALSE, scale. = FALSE)
 s <- summary(pca.expr)
 plot(pca.expr$x, pch = 16, col = m$Location, 
      xlab = paste("PC1", round(s$importance[2, 1]*100, 4), "%"),
-     ylab = paste("PC2", round(s$importance[2, 2]*100, 4), "%"))
+     ylab = paste("PC2", round(s$importance[2, 2]*100, 4), "%"),
+     main = "PCA RNAseq")
+legend("bottomleft", fill = c("red", "black"), legend = c("Pouch", "PPI"))
 plot(pca.expr$x, pch = 16, col = m$Outcome, 
      xlab = paste("PC1", round(s$importance[2, 1]*100, 4), "%"),
      ylab = paste("PC2", round(s$importance[2, 2]*100, 4), "%"))
@@ -54,7 +56,9 @@ pca <- prcomp(t(otus.data), center = TRUE, scale. = TRUE)
 s <- summary(pca)
 plot(pca$x, pch = 16, col = m$Location, 
      xlab = paste("PC1", round(s$importance[2, 1]*100, 4), "%"),
-     ylab = paste("PC2", round(s$importance[2, 2]*100, 4), "%"))
+     ylab = paste("PC2", round(s$importance[2, 2]*100, 4), "%"),
+     main = "PCA 16S")
+legend("bottom", fill = c("red", "black"), legend = c("Pouch", "PPI"))
 plot(pca$x, pch = 16, col = m$Outcome, 
      xlab = paste("PC1", round(s$importance[2, 1]*100, 4), "%"),
      ylab = paste("PC2", round(s$importance[2, 2]*100, 4), "%"))
