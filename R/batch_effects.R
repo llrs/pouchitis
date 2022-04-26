@@ -35,12 +35,22 @@ otus <- filter_RNAseq(norm_RNAseq(otus))
 
 expr.data <- expr - apply(expr, 1, median)
 pca.expr <- prcomp(t(expr.data), center = FALSE, scale. = FALSE)
-s <- summary(pca.expr)
+s_RNASeq <- summary(pca.expr)
 plot(pca.expr$x, pch = 16, col = m$Location, 
-     xlab = paste("PC1", round(s$importance[2, 1]*100, 4), "%"),
-     ylab = paste("PC2", round(s$importance[2, 2]*100, 4), "%"),
+     xlab = paste("PC1", round(s_RNASeq$importance[2, 1]*100, 4), "%"),
+     ylab = paste("PC2", round(s_RNASeq$importance[2, 2]*100, 4), "%"),
      main = "PCA RNAseq")
 legend("bottomleft", fill = c("red", "black"), legend = c("Pouch", "PPI"))
+
+pca_RNASeq<- cbind(pca.expr$x[, c(1:2)], m)
+ggplot(pca_RNASeq) +
+  geom_point(aes(PC1, PC2, col = Location, shape = Location)) +
+  labs(title = "PCA RNASeq Morgan's dataset", 
+       x = paste0("PC1 ", round(s_RNASeq$importance[2, 1]*100, 4), "%"),
+       y = paste0("PC2 ", round(s_RNASeq$importance[2, 2]*100, 4), "%")) +
+  theme_minimal()
+ggsave("Figures/PCA_RNASeq_morgan.png")
+
 plot(pca.expr$x, pch = 16, col = m$Outcome, 
      xlab = paste("PC1", round(s$importance[2, 1]*100, 4), "%"),
      ylab = paste("PC2", round(s$importance[2, 2]*100, 4), "%"))
@@ -53,7 +63,17 @@ plot(pca.expr$x, pch = 16, col = m$Gender,
 
 otus.data <- otus - apply(otus, 1, median)
 pca <- prcomp(t(otus.data), center = TRUE, scale. = TRUE)
-s <- summary(pca)
+s_16S <- summary(pca)
+
+pca_16S_m <- cbind(pca$x[, c(1:2)], m)
+ggplot(pca_16S_m) +
+  geom_point(aes(PC1, PC2, col = Location, shape = Location)) +
+  labs(title = "PCA 16S Morgan's dataset", 
+       x = paste0("PC1 ", round(s_16S$importance[2, 1]*100, 4), "%"),
+       y = paste ("PC2 ", round(s_16S$importance[2, 2]*100, 4), "%"))+
+  theme_minimal()
+ggsave("Figures/PCA_16S_morgan.png")
+
 plot(pca$x, pch = 16, col = m$Location, 
      xlab = paste("PC1", round(s$importance[2, 1]*100, 4), "%"),
      ylab = paste("PC2", round(s$importance[2, 2]*100, 4), "%"),
