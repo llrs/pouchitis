@@ -359,9 +359,11 @@ m1.2 <- data.frame(inner = model1.2$AVE$AVE_inner[1],
 m2.2 <- data.frame(inner = model2.2$AVE$AVE_inner[1], 
                  outer = model2.2$AVE$AVE_outer[1],
                  Model = "2.2")
-ggplot(aves, aes(inner, outer, col = Model)) +
+ggplot(aves, aes(inner, outer, col = Model, shape = Model)) +
   geom_point(alpha = 0.25) +
-  stat_ellipse() +
+  stat_ellipse(type = "norm") +
   geom_point(data = m0) +
   geom_point(data = m1.2) +
-  geom_point(data = m2.2)
+  geom_point(data = m2.2) +
+  labs(title = "Boostraping Morgan's dataset")
+ggsave("Figures/same_boostrap_models.png")
